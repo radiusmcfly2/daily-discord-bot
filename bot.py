@@ -27,7 +27,7 @@ async def on_ready():
 async def daily_post():
     now = datetime.datetime.now()
 
-    if now.hour == 17 and now.minute == 24:  # Uhrzeit
+    if now.hour == 17 and now.minute == 27:  # Uhrzeit
         today = datetime.date.today()
         day_index = (today - START_DATE).days
 
