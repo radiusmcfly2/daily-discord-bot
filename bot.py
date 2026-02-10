@@ -41,7 +41,8 @@ async def daily_post():
                     f"📅 **Daily Kalender**\n\n"
                     f"🎨 **Prompt**\n{prompt}\n\n"
                     f"🧠 **Word of the Day**\n{word}\n\n"
-                    f"🎵 **Song**\n{song}"
+                    f"🎵 **Song of the Day**\n{song}"
                 )
 
 bot.run(TOKEN)
+
