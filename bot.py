@@ -27,7 +27,7 @@ async def on_ready():
 async def daily_post():
     now = datetime.datetime.now()
 
-    if now.hour == 17 and now.minute == 21:  # Uhrzeit
+    if now.hour == 17 and now.minute == 24:  # Uhrzeit
         today = datetime.date.today()
         day_index = (today - START_DATE).days
 
@@ -41,9 +41,7 @@ async def daily_post():
                     f"📅 **Daily Kalender**\n\n"
                     f"🎨 **Prompt**\n{prompt}\n\n"
                     f"🧠 **Word of the Day**\n{word}\n\n"
-                    f"🎵 **Song of the Day**\n{song}"
+                    f"🎵 **Song**\n{song}"
                 )
 
 bot.run(TOKEN)
-
-
