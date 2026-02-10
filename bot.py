@@ -21,7 +21,25 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print("Bot ist online:", bot.user)
+
+    today = datetime.date.today()
+    day_index = (today - START_DATE).days
+
+    prompt = prompts[day_index % len(prompts)]
+    song = songs[day_index % len(songs)]
+    word = words[day_index % len(words)]
+
+    for channel in bot.get_all_channels():
+        if channel.name == "daily":
+            await channel.send(
+                f"🧪 **TEST – Daily Kalender**\n\n"
+                f"🎨 **Prompt**\n{prompt}\n\n"
+                f"🧠 **Word of the Day**\n{word}\n\n"
+                f"🎵 **Song of the Day**\n{song}"
+            )
+
     daily_post.start()
+
 
 @tasks.loop(minutes=1)
 async def daily_post():
@@ -41,7 +59,7 @@ async def daily_post():
                     f"📅 **Daily Kalender**\n\n"
                     f"🎨 **Prompt**\n{prompt}\n\n"
                     f"🧠 **Word of the Day**\n{word}\n\n"
-                    f"🎵 **Song**\n{song}"
+                    f"🎵 **Song of the Day**\n{song}"
                 )
 
 bot.run(TOKEN)
