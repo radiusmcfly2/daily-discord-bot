@@ -1,6 +1,13 @@
 # — Wichtig: dieser Code ersetzt die create_bot()-Funktion und den Teil, der das Bot-Objekt erzeugt.
 #           Er setzt voraus, dass prompts, songs, words, START_DATE, POST_HOUR_UTC, TOKEN usw. bereits definiert sind.
 
+import os
+import discord
+from discord.ext import commands, tasks
+import datetime
+import time
+import json
+
 GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
 OWNER_ID = int(os.getenv("OWNER_ID")) if os.getenv("OWNER_ID") else None
 
