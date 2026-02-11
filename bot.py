@@ -5,11 +5,10 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-# Konfiguration (anpassen oder via Environment setzen)
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
 OWNER_ID = int(os.getenv("OWNER_ID")) if os.getenv("OWNER_ID") else None
-START_DATE = datetime.date.fromisoformat(os.getenv("START_DATE")) if os.getenv("START_DATE") else datetime.date(2026, 2, 10)
+START_DATE = datetime.date.fromisoformat(os.getenv("START_DATE")) if os.getenv("START_DATE") else datetime.date(2026, 2, 09)
 POST_HOUR_UTC = int(os.getenv("POST_HOUR_UTC")) if os.getenv("POST_HOUR_UTC") else 8  # Stunde in UTC
 LAST_POST_FILE = "last_post.txt"
 LOGIN_STATE_FILE = "login_state.json"
@@ -73,10 +72,10 @@ def create_bot():
         song = songs[day_index % len(songs)]
         word = words[day_index % len(words)]
         content = (
-            f"📅 **Daily Kalender**\n\n"
-            f"🎨 **Prompt**\n{prompt}\n\n"
+            f"📅 **Lockleys Calendar**\n\n"
+            f"🎨 **Prompt of the Day**\n{prompt}\n\n"
             f"🧠 **Word of the Day**\n{word}\n\n"
-            f"🎵 **Song**\n{song}"
+            f"🎵 **Song of the Day**\n{song}"
         )
         await channel.send(content)
 
