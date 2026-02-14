@@ -1,0 +1,27 @@
+name: Daily Calendar Post
+
+on:
+  schedule:
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo laden
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: requests installieren
+        run: pip install requests
+
+      - name: Script ausführen
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          START_DATETIME_UTC: ${{ secrets.START_DATETIME_UTC }}
+        run: python send_daily.py
