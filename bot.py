@@ -72,7 +72,6 @@ def create_bot():
         song = songs[day_index % len(songs)]
         word = words[day_index % len(words)]
         content = (
-            f"📅 **Lockleys Calendar**\n\n"
             f"🎨 **Prompt of the Day**\n{prompt}\n\n"
             f"🧠 **Word of the Day**\n{word}\n\n"
             f"🎵 **Song of the Day**\n{song}"
@@ -139,10 +138,9 @@ def create_bot():
         word = words[day_index % len(words)]
         try:
             await channel.send(
-                f"📅 **Daily Kalender**\n\n"
-                f"🎨 **Prompt**\n{prompt}\n\n"
-                f"🧠 **Word of the Day**\n{word}\n\n"
-                f"🎵 **Song**\n{song}"
+            f"🎨 **Prompt of the Day**\n{prompt}\n\n"
+            f"🧠 **Word of the Day**\n{word}\n\n"
+            f"🎵 **Song of the Day**\n{song}"
             )
             set_last_post_date(now.date().isoformat())
         except Exception as e:
@@ -209,3 +207,4 @@ def main_loop():
 
 if __name__ == "__main__":
     main_loop()
+
