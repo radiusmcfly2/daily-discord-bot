@@ -8,9 +8,13 @@ from discord.ext import commands, tasks
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
 OWNER_ID = int(os.getenv("OWNER_ID")) if os.getenv("OWNER_ID") else None
-START_DATE = datetime.date.fromisoformat(os.getenv("START_DATE")) if os.getenv("START_DATE") else datetime.date(2026, 2, 10)
-POST_HOUR_UTC = int(os.getenv("POST_HOUR_UTC")) if os.getenv("POST_HOUR_UTC") else 8  # Stunde in UTC
-LAST_POST_FILE = "last_post.txt"
+
+# START_DATETIME_UTC in ISO (UTC) - setze hier oder als ENV "START_DATETIME_UTC"
+# Start: friend local 2026-03-04 22:00 (UTC+3) -> UTC = 2026-03-04 19:00
+START_DATETIME_UTC = os.getenv("START_DATETIME_UTC", "2026-03-04T19:00:00Z")
+POST_HOUR_UTC = int(os.getenv("POST_HOUR_UTC")) if os.getenv("POST_HOUR_UTC") else 19
+
+LAST_POST_INDEX_FILE = "last_post_index.txt"
 LOGIN_STATE_FILE = "login_state.json"
 
 INITIAL_BACKOFF = 60 * 5
@@ -24,18 +28,26 @@ prompts = load_lines("prompts.txt")
 songs = load_lines("music.txt")
 words = load_lines("words.txt")
 
-def get_last_post_date():
-    if not os.path.exists(LAST_POST_FILE):
+def get_last_post_index():
+    if not os.path.exists(LAST_POST_INDEX_FILE):
         return None
     try:
-        with open(LAST_POST_FILE, "r", encoding="utf-8") as f:
-            return f.read().strip()
+        with open(LAST_POST_INDEX_FILE, "r", encoding="utf-8") as f:
+            return int(f.read().strip())
     except Exception:
         return None
 
-def set_last_post_date(date_str):
-    with open(LAST_POST_FILE, "w", encoding="utf-8") as f:
-        f.write(date_str)
+def set_last_post_index(idx):
+    with open(LAST_POST_INDEX_FILE, "w", encoding="utf-8") as f:
+        f.write(str(int(idx)))
+
+def parse_start_datetime(iso_str):
+    # akzeptiert Formate wie "2026-03-04T19:00:00Z" oder "2026-03-04T19:00:00"
+    if iso_str.endswith("Z"):
+        iso_str = iso_str[:-1]
+    return datetime.datetime.fromisoformat(iso_str).replace(tzinfo=datetime.timezone.utc)
+
+START_DT_UTC = parse_start_datetime(START_DATETIME_UTC)
 
 def load_login_state():
     if not os.path.exists(LOGIN_STATE_FILE):
@@ -64,17 +76,25 @@ def create_bot():
 
     async def send_compiled_message_to_channel(channel, target_date=None):
         if target_date is None:
-            now_date = datetime.date.today()
+            now_date = (datetime.datetime.utcnow()).date()
         else:
             now_date = target_date
-        day_index = (now_date - START_DATE).days
+        # compute day_index relative to START_DT_UTC
+        # day_index = floor((date_midnight_utc - start_datetime_utc) / 86400)
+        # For consistent day index use: use UTC date anchored at START_DT_UTC time
+        # Simpler: compute seconds difference using start midnight anchor:
+        delta_days = int((datetime.datetime.combine(now_date, datetime.time(0,0, tzinfo=datetime.timezone.utc)) - START_DT_UTC).total_seconds() // 86400)
+        day_index = delta_days
+        if day_index < 0:
+            return
         prompt = prompts[day_index % len(prompts)]
         song = songs[day_index % len(songs)]
         word = words[day_index % len(words)]
         content = (
-            f"🎨 **Prompt of the Day**\n{prompt}\n\n"
+            f"📅 **Daily Kalender**\n\n"
+            f"🎨 **Prompt**\n{prompt}\n\n"
             f"🧠 **Word of the Day**\n{word}\n\n"
-            f"🎵 **Song of the Day**\n{song}"
+            f"🎵 **Song**\n{song}"
         )
         await channel.send(content)
 
@@ -86,7 +106,7 @@ def create_bot():
                 await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
                 print(f"[info] Tree commands synced for guild {GUILD_ID}")
             except Exception as e:
-                print("[warn] Fehler beim Sync der Commands:", e)
+                print("[warn] Sync-Fehler:", e)
         daily_post.start()
 
     if GUILD_ID:
@@ -105,6 +125,7 @@ def create_bot():
                 await interaction.followup.send("Kanal #daily nicht gefunden.", ephemeral=True)
                 return
             try:
+                # preview uses today's date in friend's local sense (handled by send_compiled_message)
                 await send_compiled_message_to_channel(channel)
                 await interaction.followup.send("Testnachricht gesendet.", ephemeral=True)
             except Exception as e:
@@ -114,12 +135,28 @@ def create_bot():
 
     @tasks.loop(minutes=5)
     async def daily_post():
-        now = datetime.datetime.utcnow()
-        today_str = now.date().isoformat()
-        if get_last_post_date() == today_str:
+        now_utc = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        # If now is before start datetime, do nothing
+        if now_utc < START_DT_UTC:
             return
-        if now.hour < POST_HOUR_UTC:
+
+        # compute current day_index using start anchor
+        # use UTC date anchored at 00:00 and compare to start_datetime
+        today_utc_midnight = datetime.datetime.combine(now_utc.date(), datetime.time(0,0, tzinfo=datetime.timezone.utc))
+        day_index = int((today_utc_midnight - START_DT_UTC).total_seconds() // 86400)
+        if day_index < 0:
             return
+
+        # only post at or after configured hour (UTC)
+        if now_utc.hour < POST_HOUR_UTC:
+            return
+
+        last_idx = get_last_post_index()
+        if last_idx is not None and last_idx >= day_index:
+            # already posted for this day_index
+            return
+
+        # find channel
         channel = None
         if GUILD_ID:
             guild = bot.get_guild(GUILD_ID)
@@ -132,19 +169,21 @@ def create_bot():
         if not channel:
             print("[warn] Kanal #daily nicht gefunden; retry später.")
             return
-        day_index = (now.date() - START_DATE).days
+
+        # build and send
         prompt = prompts[day_index % len(prompts)]
         song = songs[day_index % len(songs)]
         word = words[day_index % len(words)]
         try:
             await channel.send(
-            f"🎨 **Prompt of the Day**\n{prompt}\n\n"
-            f"🧠 **Word of the Day**\n{word}\n\n"
-            f"🎵 **Song of the Day**\n{song}"
+                f"📅 **Daily Kalender**\n\n"
+                f"🎨 **Prompt**\n{prompt}\n\n"
+                f"🧠 **Word of the Day**\n{word}\n\n"
+                f"🎵 **Song**\n{song}"
             )
-            set_last_post_date(now.date().isoformat())
+            set_last_post_index(day_index)
         except Exception as e:
-            print("[error] Fehler beim Senden der täglichen Nachricht:", e)
+            print("[error] Fehler beim Senden:", e)
 
     return bot
 
@@ -207,4 +246,3 @@ def main_loop():
 
 if __name__ == "__main__":
     main_loop()
-
