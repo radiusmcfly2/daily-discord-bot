@@ -6,7 +6,7 @@ import json
 import requests
 
 WEBHOOK = os.getenv("DISCORD_WEBHOOK_URL")
-START_ISO = os.getenv("START_DATETIME_UTC", "2026-03-04T19:00:00Z")
+START_ISO = os.getenv("START_DATETIME_UTC", "2026-03-04T19:00:00Z").strip()
 
 if not WEBHOOK:
     print("ERROR: DISCORD_WEBHOOK_URL not set")
@@ -61,3 +61,4 @@ if r.status_code >= 400:
     sys.exit(2)
 
 print("Posted successfully for day_index", day_index)
+
