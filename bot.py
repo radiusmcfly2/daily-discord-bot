@@ -9,8 +9,6 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
 OWNER_ID = int(os.getenv("OWNER_ID")) if os.getenv("OWNER_ID") else None
 
-# START_DATETIME_UTC in ISO (UTC) - setze hier oder als ENV "START_DATETIME_UTC"
-# Start: friend local 2026-03-04 22:00 (UTC+3) -> UTC = 2026-03-04 19:00
 START_DATETIME_UTC = os.getenv("START_DATETIME_UTC", "2026-03-04T19:00:00Z")
 POST_HOUR_UTC = int(os.getenv("POST_HOUR_UTC")) if os.getenv("POST_HOUR_UTC") else 19
 
@@ -79,10 +77,7 @@ def create_bot():
             now_date = (datetime.datetime.utcnow()).date()
         else:
             now_date = target_date
-        # compute day_index relative to START_DT_UTC
-        # day_index = floor((date_midnight_utc - start_datetime_utc) / 86400)
-        # For consistent day index use: use UTC date anchored at START_DT_UTC time
-        # Simpler: compute seconds difference using start midnight anchor:
+     
         delta_days = int((datetime.datetime.combine(now_date, datetime.time(0,0, tzinfo=datetime.timezone.utc)) - START_DT_UTC).total_seconds() // 86400)
         day_index = delta_days
         if day_index < 0:
@@ -127,7 +122,7 @@ def create_bot():
             try:
                 # preview uses today's date in friend's local sense (handled by send_compiled_message)
                 await send_compiled_message_to_channel(channel)
-                await interaction.followup.send("Testnachricht gesendet.", ephemeral=True)
+                await interaction.followup.send("ALLES GUT DU HURENSOHN.", ephemeral=True)
             except Exception as e:
                 await interaction.followup.send(f"Fehler beim Senden: {e}", ephemeral=True)
     else:
@@ -176,10 +171,9 @@ def create_bot():
         word = words[day_index % len(words)]
         try:
             await channel.send(
-                f"📅 **Daily Kalender**\n\n"
-                f"🎨 **Prompt**\n{prompt}\n\n"
+                f"🎨 **Prompt of the Day**\n{prompt}\n\n"
                 f"🧠 **Word of the Day**\n{word}\n\n"
-                f"🎵 **Song**\n{song}"
+                f"🎵 **Song of the Day**\n{song}"
             )
             set_last_post_index(day_index)
         except Exception as e:
@@ -246,3 +240,4 @@ def main_loop():
 
 if __name__ == "__main__":
     main_loop()
+
