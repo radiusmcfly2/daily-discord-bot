@@ -143,7 +143,7 @@ async def daily_post():
     await send_daily(channel, today)
 
 
-bot.run(TOKEN)import os
+bot.run(TOKEN) import os
 import datetime
 import discord
 from discord.ext import commands, tasks
@@ -237,4 +237,5 @@ async def daily_post():
     await send_daily_message(channel)
 
 bot.run(TOKEN)
+
 
