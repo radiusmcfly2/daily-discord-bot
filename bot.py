@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
 OWNER_ID = int(os.getenv("OWNER_ID")) if os.getenv("OWNER_ID") else None
-START_DATE = datetime.date.fromisoformat(os.getenv("START_DATE")) if os.getenv("START_DATE") else datetime.date(2026, 2, 10)
+START_DATE = datetime.date.fromisoformat(os.getenv("START_DATE")) if os.getenv("START_DATE") else datetime.date(2026, 3, 5)
 POST_HOUR_UTC = int(os.getenv("POST_HOUR_UTC")) if os.getenv("POST_HOUR_UTC") else 8  # Stunde in UTC
 LAST_POST_FILE = "last_post.txt"
 LOGIN_STATE_FILE = "login_state.json"
@@ -209,3 +209,4 @@ def main_loop():
 
 if __name__ == "__main__":
     main_loop()
+
