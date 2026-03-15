@@ -20,7 +20,18 @@ args = parser.parse_args()
 WEBHOOK = os.getenv("DISCORD_WEBHOOK_URL")
 START_ISO = os.getenv("START_DATETIME_UTC", "2026-03-04T19:00:00Z").strip()
 FORCE_ENV = os.getenv("FORCE_POST", "false").lower() in ("1", "true", "yes")
-OFFSET_ENV = int(os.getenv("PREVIEW_OFFSET", "0"))
+
+# --- safe parse of PREVIEW_OFFSET: handle None, empty, whitespace, and bad values ---
+_preview_raw = os.getenv("PREVIEW_OFFSET")
+if _preview_raw is None or _preview_raw.strip() == "":
+    OFFSET_ENV = 0
+else:
+    try:
+        OFFSET_ENV = int(_preview_raw.strip())
+    except ValueError:
+        print(f"ERROR: PREVIEW_OFFSET must be an integer or empty; got {_preview_raw!r}")
+        sys.exit(1)
+# ------------------------------------------------------------------------------
 
 if not WEBHOOK:
     print("ERROR: DISCORD_WEBHOOK_URL not set")
