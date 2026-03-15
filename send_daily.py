@@ -85,10 +85,9 @@ song = songs[day_index % len(songs)]
 word = words[day_index % len(words)]
 
 content = (
-    f"📅 **Daily Kalender**\n\n"
-    f"🎨 **Prompt**\n{prompt}\n\n"
+    f"🎨 **Prompt of the Day**\n{prompt}\n\n"
     f"🧠 **Word of the Day**\n{word}\n\n"
-    f"🎵 **Song**\n{song}"
+    f"🎵 **Song of the Day**\n{song}"
 )
 
 # POST to webhook
